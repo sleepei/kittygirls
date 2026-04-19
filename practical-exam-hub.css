@@ -663,3 +663,84 @@ pre {
 .cc-green  .cc-card-header { background: #eaf4e6; }
 .cc-yellow .cc-card-header { background: #fdf8e3; }
 .cc-red    .cc-card-header { background: #fce8e8; }
+/* ─── Interactive option buttons ──────────────────────────────────────────── */
+.option-list { display: grid; gap: 0.55rem; margin-bottom: 0.5rem; }
+
+.option-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  line-height: 1.4;
+}
+.option-btn:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  transform: translateX(3px);
+}
+.option-btn.option-selected {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.option-btn.option-correct {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success);
+  font-weight: 700;
+}
+.option-btn.option-wrong {
+  background: var(--color-error-soft);
+  border-color: var(--color-error);
+  color: var(--color-error);
+  font-weight: 700;
+}
+.option-btn.option-wrong-neutral { opacity: 0.4; }
+.option-btn:disabled { cursor: default; transform: none; }
+.option-actions { margin-top: 0.5rem; }
+
+/* ─── Status badge ─────────────────────────────────────────────────────────── */
+.q-status-badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+}
+.badge-correct { background: var(--color-success-soft); color: var(--color-success); }
+.badge-wrong   { background: var(--color-error-soft);   color: var(--color-error); }
+
+/* ─── Card border highlight on result ─────────────────────────────────────── */
+.card-correct { border-color: var(--color-success) !important; }
+.card-wrong   { border-color: var(--color-error)   !important; }
+
+/* ─── Answer box (show reasoning after answering) ─────────────────────────── */
+.answer-box {
+  margin-top: 0.85rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  display: none;
+}
+.answer-box.show { display: block; }
+.answer-label {
+  font-size: 0.77rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  color: var(--color-success);
+  margin-bottom: 0.35rem;
+}
+
+/* ─── Reset / Try again button ─────────────────────────────────────────────── */
+.reset-btn {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+.reset-btn:hover { background: var(--color-surface-offset); }

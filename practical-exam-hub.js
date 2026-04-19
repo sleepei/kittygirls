@@ -1735,40 +1735,57 @@ Action: Send SNS notification to dba-team@securepay.io`
 
 function createQuestionCard(question, scenarioId, index) {
   const questionId = `${scenarioId}-${index}`;
-  const optionsHtml = question.options
-    ? `<div class="option-list">${question.options.map(option => `<div class="option-item">${option}</div>`).join('')}</div>`
-    : '';
+  const type = question.type;
+  const fullAnswer = question.answer || '';
+  const hasOptions = !!question.options;
+  const isMulti = type === 'Multiple Answer';
 
-  const itemsSource = question.items
-    ? (question.type === 'Matching' ? 'match-list' : 'order-list')
-    : '';
+  let optionsHtml = '';
+  if (hasOptions) {
+    optionsHtml = `
+      <div class="option-list" data-qid="${questionId}" data-multi="${isMulti}" data-answered="false">
+        ${question.options.map((opt, i) => `
+          <button class="option-btn" data-option-index="${i}" data-qid="${questionId}" aria-pressed="false">${opt}</button>
+        `).join('')}
+      </div>
+      <div class="option-actions" id="opt-actions-${questionId}" style="display:none;">
+        ${isMulti ? `<button class="btn btn-primary submit-multi-btn" data-qid="${questionId}">Check answers</button>` : ''}
+      </div>`;
+  }
 
+  const itemsSource = question.items ? (type === 'Matching' ? 'match-list' : 'order-list') : '';
   const itemsHtml = question.items
-    ? `<div class="${itemsSource}">${question.items.map(item => `<div class="${question.type === 'Matching' ? 'match-item' : 'order-item'}">${item}</div>`).join('')}</div>`
+    ? `<div class="${itemsSource}">${question.items.map(item =>
+        `<div class="${type === 'Matching' ? 'match-item' : 'order-item'}">${item}</div>`).join('')}</div>`
     : '';
+
+  // Non-option questions still get a reveal button
+  const revealBtn = !hasOptions
+    ? `<button class="reveal-btn" data-answer-toggle="${questionId}">Reveal answer</button>
+       <button class="toggle-btn" data-mark-correct="${questionId}">Mark as studied</button>`
+    : `<button class="reveal-btn reset-btn" data-reset-qid="${questionId}" style="display:none;">↺ Try again</button>`;
 
   return `
-    <article class="question-card">
+    <article class="question-card" id="card-${questionId}">
       <div class="question-top">
         <div>
-          <span class="meta-chip">${question.type}</span>
+          <span class="meta-chip">${type}</span>
           <span class="meta-chip">${question.marks} marks</span>
         </div>
+        <span class="q-status-badge" id="badge-${questionId}"></span>
       </div>
       <p class="question-text">Question ${index + 1} — ${question.text}</p>
       ${optionsHtml}
       ${itemsHtml}
-      <div class="question-actions">
-        <button class="reveal-btn" data-answer-toggle="${questionId}">Reveal answer</button>
-        <button class="toggle-btn" data-mark-correct="${questionId}">Mark as studied</button>
-      </div>
+      <div class="question-actions">${revealBtn}</div>
       <div class="answer-box" id="${questionId}">
-        <p class="answer-label">Correct answer</p>
-        <p>${question.answer}</p>
+        <p class="answer-label">Correct answer &amp; reasoning</p>
+        <p>${fullAnswer}</p>
       </div>
     </article>
   `;
 }
+
 
 function createScenarioCard(scenario, isOpen = false) {
   return `
@@ -1865,6 +1882,93 @@ function setupScenarioToggles() {
       appState.correct += active ? 1 : -1;
       if (appState.correct < 0) appState.correct = 0;
       updateProgress();
+      return;
+    }
+
+    // ── Single-select option button (Multiple Choice / True/False) ──
+    const optBtn = event.target.closest('.option-btn');
+    if (optBtn) {
+      const qid = optBtn.dataset.qid;
+      const listEl = document.querySelector(`.option-list[data-qid="${qid}"]`);
+      if (!listEl || listEl.dataset.answered === 'true') return;
+      const isMulti = listEl.dataset.multi === 'true';
+
+      if (!isMulti) {
+        listEl.dataset.answered = 'true';
+        const q = findQuestion(qid);
+        const fullAnswer = q ? q.answer : '';
+        const chosenLetter = optBtn.textContent.trim().split('.')[0].trim().toUpperCase();
+        const isCorrect = fullAnswer.toUpperCase().includes(chosenLetter + '.');
+
+        listEl.querySelectorAll('.option-btn').forEach(btn => {
+          const bLetter = btn.textContent.trim().split('.')[0].trim().toUpperCase();
+          btn.classList.add(fullAnswer.toUpperCase().includes(bLetter + '.') ? 'option-correct' : 'option-wrong-neutral');
+          btn.disabled = true;
+        });
+        optBtn.classList.remove('option-wrong-neutral');
+        optBtn.classList.add(isCorrect ? 'option-correct' : 'option-wrong');
+        resolveQuestion(qid, isCorrect, fullAnswer);
+      } else {
+        optBtn.classList.toggle('option-selected');
+        optBtn.setAttribute('aria-pressed', optBtn.classList.contains('option-selected') ? 'true' : 'false');
+        const actionsEl = document.getElementById(`opt-actions-${qid}`);
+        if (actionsEl) actionsEl.style.display = 'block';
+      }
+      return;
+    }
+
+    // ── Submit multi-answer ──
+    const submitMulti = event.target.closest('.submit-multi-btn');
+    if (submitMulti) {
+      const qid = submitMulti.dataset.qid;
+      const listEl = document.querySelector(`.option-list[data-qid="${qid}"]`);
+      if (!listEl || listEl.dataset.answered === 'true') return;
+      listEl.dataset.answered = 'true';
+
+      const q = findQuestion(qid);
+      const fullAnswer = q ? q.answer : '';
+      const correctLetters = [...fullAnswer.toUpperCase().matchAll(/\b([A-D])\b/g)].map(m => m[1]);
+      const selectedLetters = [...listEl.querySelectorAll('.option-btn.option-selected')]
+                                .map(b => b.textContent.trim().split('.')[0].trim().toUpperCase());
+      const isCorrect = correctLetters.length === selectedLetters.length &&
+                        correctLetters.every(l => selectedLetters.includes(l));
+
+      listEl.querySelectorAll('.option-btn').forEach(btn => {
+        const bLetter = btn.textContent.trim().split('.')[0].trim().toUpperCase();
+        if (correctLetters.includes(bLetter)) btn.classList.add('option-correct');
+        else if (btn.classList.contains('option-selected')) btn.classList.add('option-wrong');
+        else btn.classList.add('option-wrong-neutral');
+        btn.disabled = true;
+      });
+      const actionsEl = document.getElementById(`opt-actions-${qid}`);
+      if (actionsEl) actionsEl.style.display = 'none';
+      resolveQuestion(qid, isCorrect, fullAnswer);
+      return;
+    }
+
+    // ── Try again (reset) ──
+    const resetBtn = event.target.closest('[data-reset-qid]');
+    if (resetBtn) {
+      const qid = resetBtn.dataset.resetQid;
+      const listEl = document.querySelector(`.option-list[data-qid="${qid}"]`);
+      if (!listEl) return;
+      listEl.dataset.answered = 'false';
+      listEl.querySelectorAll('.option-btn').forEach(btn => {
+        btn.classList.remove('option-correct', 'option-wrong', 'option-wrong-neutral', 'option-selected');
+        btn.disabled = false;
+        btn.setAttribute('aria-pressed', 'false');
+      });
+      const ansBox = document.getElementById(qid);
+      if (ansBox) ansBox.classList.remove('show');
+      const badge = document.getElementById(`badge-${qid}`);
+      if (badge) { badge.textContent = ''; badge.className = 'q-status-badge'; }
+      const card = document.getElementById(`card-${qid}`);
+      if (card) card.classList.remove('card-correct', 'card-wrong');
+      resetBtn.style.display = 'none';
+      const actionsEl = document.getElementById(`opt-actions-${qid}`);
+      if (actionsEl) actionsEl.style.display = 'none';
+      appState.revealed.delete(qid);
+      return;
     }
   });
 
@@ -2187,6 +2291,42 @@ function renderCrashCourse() {
 }
 
 // Hook crash course rendering into view switching
+
+// ── Helpers for interactive questions ─────────────────────────────────────────
+function findQuestion(qid) {
+  const all = [...officialScenarios, ...generatedScenarios];
+  for (const scenario of all) {
+    for (let i = 0; i < scenario.questions.length; i++) {
+      if (`${scenario.id}-${i}` === qid) return scenario.questions[i];
+    }
+  }
+  return null;
+}
+
+function resolveQuestion(qid, isCorrect, fullAnswer) {
+  const answerBox = document.getElementById(qid);
+  if (answerBox) answerBox.classList.add('show');
+
+  const badge = document.getElementById(`badge-${qid}`);
+  if (badge) {
+    badge.textContent = isCorrect ? '✓ Correct' : '✗ Incorrect';
+    badge.className = `q-status-badge ${isCorrect ? 'badge-correct' : 'badge-wrong'}`;
+  }
+
+  const card = document.getElementById(`card-${qid}`);
+  if (card) card.classList.add(isCorrect ? 'card-correct' : 'card-wrong');
+
+  const resetBtn = document.querySelector(`[data-reset-qid="${qid}"]`);
+  if (resetBtn) resetBtn.style.display = 'inline-flex';
+
+  if (!appState.revealed.has(qid)) {
+    appState.revealed.add(qid);
+    appState.answered += 1;
+    if (isCorrect) appState.correct += 1;
+    updateProgress();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const origNavButtons = document.querySelectorAll('.side-link');
   origNavButtons.forEach(btn => {
