@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloud Practical Exam Hub</title>
+  <meta name="description" content="Interactive cloud computing practical question hub with official and generated scenarios." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=boska@500,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="practical-exam-hub.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-label="Cloud Practical Exam Hub logo">
+            <path d="M14 31.5h19.5a7.5 7.5 0 0 0 .6-15 10.2 10.2 0 0 0-19 3.2A6.5 6.5 0 0 0 14 31.5Z"/>
+            <path d="M18 24h12"/>
+            <path d="M24 18v12"/>
+          </svg>
+        </div>
+        <div>
+          <p class="eyebrow">MOD006125 Practical Revision</p>
+          <h1>Cloud Practical Exam Hub</h1>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Switch to dark mode" data-theme-toggle>
+          <span id="themeIcon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main" class="app-grid">
+      <aside class="sidebar panel">
+        <div class="sidebar-block">
+          <p class="sidebar-label">Sections</p>
+          <nav class="side-nav" aria-label="Page sections">
+            <button class="side-link active" data-view-target="official">Official Scenarios</button>
+            <button class="side-link" data-view-target="generated">Generated Practice</button>
+            <button class="side-link" data-view-target="overview">Format Guide</button>
+            <button class="side-link" data-view-target="crashcourse">Crash Course</button>
+          </nav>
+        </div>
+
+        <div class="sidebar-block score-card">
+          <p class="sidebar-label">Live progress</p>
+          <div class="score-stat">
+            <span>Answered</span>
+            <strong id="answeredCount">0</strong>
+          </div>
+          <div class="score-stat">
+            <span>Correct</span>
+            <strong id="correctCount">0</strong>
+          </div>
+          <div class="score-stat">
+            <span>Accuracy</span>
+            <strong id="accuracyCount">0%</strong>
+          </div>
+          <div class="progress-track"><div id="progressBar" class="progress-fill"></div></div>
+        </div>
+
+        <div class="sidebar-block helper-card">
+          <p class="sidebar-label">Question types</p>
+          <div class="mini-tags">
+            <span>MCQ</span>
+            <span>Multi-answer</span>
+            <span>True/False</span>
+            <span>Fill blank</span>
+            <span>Matching</span>
+            <span>Ordering</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="content-column">
+        <section class="hero panel">
+          <div>
+            <p class="hero-pill">Scenario-first practical prep</p>
+            <h2>Read artefacts, extract clues, then answer like the real assessment.</h2>
+            <p class="hero-copy">This version separates official scenario material from generated practice. The official questions below use the exact wording and exact answers from your attached PDFs, while the generated section gives you more scenario-based practice in the same style.</p>
+          </div>
+          <div class="hero-metrics">
+            <div class="metric-box">
+              <span>Official scenarios</span>
+              <strong>5</strong>
+            </div>
+            <div class="metric-box">
+              <span>Official questions</span>
+              <strong>50</strong>
+            </div>
+            <div class="metric-box">
+              <span>Generated questions</span>
+              <strong>10</strong>
+            </div>
+          </div>
+        </section>
+
+        <section id="overview" class="view-section panel visible-view">
+          <div class="section-head">
+            <p class="section-kicker">Format guide</p>
+            <h3>How this practical paper works</h3>
+            <p>You are expected to read stimulus material such as IAM policies, CLI output, user data scripts, subnet settings, automation artefacts, and platform health details before answering. The fastest way to score is to work from the artefact outward instead of guessing from memory.</p>
+          </div>
+
+          <div class="overview-grid">
+            <article class="overview-card">
+              <h4>Read in layers</h4>
+              <ul>
+                <li>Start with the scenario summary.</li>
+                <li>Scan artefacts for keywords like subnet, public IP, Deny, rate, device, healthy, or target CPU.</li>
+                <li>Then answer only from what the scenario proves.</li>
+              </ul>
+            </article>
+            <article class="overview-card">
+              <h4>Typical traps</h4>
+              <ul>
+                <li>Explicit Deny overrides Allow.</li>
+                <li>Private subnet plus null public IP means no public internet access.</li>
+                <li>User data normally runs only on first boot.</li>
+                <li>You cannot attach a snapshot directly; you create a volume from it first.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="official" class="view-section panel hidden-view">
+          <div class="section-head split-head">
+            <div>
+              <p class="section-kicker">Official side</p>
+              <h3>Real scenarios and exact answers</h3>
+              <p>The questions and correct answers in this section are copied from your attached practical PDFs.</p>
+            </div>
+            <div class="toolbar-row">
+              <button class="btn btn-secondary" id="expandAllOfficial">Expand all</button>
+              <button class="btn btn-secondary" id="collapseAllOfficial">Collapse all</button>
+            </div>
+          </div>
+
+          <div class="scenario-stack" id="officialScenarios"></div>
+        </section>
+
+<section id="crashcourse" class="view-section hidden-vi">
+  <div class="scenario-header">
+    <h2 class="scenario-title">Crash Course — Exam Prep</h2>
+    <p class="scenario-desc">All key concepts from the preparatory bundle condensed into one fast-review guide.</p>
+  </div>
+  <div id="crashcourse-content"></div>
+</section>
+
+        <section id="generated" class="view-section panel hidden-view">
+          <div class="section-head">
+            <p class="section-kicker">Generated side</p>
+            <h3>Extra practice in the same style</h3>
+            <p>This part keeps the same stimulus-first structure but uses fresh scenario material so you can practice reasoning without repeating only the official set.</p>
+          </div>
+          <div class="scenario-stack" id="generatedScenarios"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="practical-exam-hub.js"></script>
+</body>
+</html>
